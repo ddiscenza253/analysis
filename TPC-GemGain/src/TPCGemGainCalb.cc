@@ -17,6 +17,9 @@
 #include <trackbase_historic/SvtxTrack_v2.h>
 #include <trackbase_historic/SvtxTrackMap.h>
 #include <trackbase_historic/SvtxVertexMap.h>
+#include <trackbase/TrkrHitSetContainerv1.h>
+#include <trackbase/TrkrHitv2.h>
+#include <trackbase/TrkrHitSetv1.h>
 
 
 using namespace std;
@@ -25,11 +28,11 @@ using namespace std;
 TPCGemGainCalb::TPCGemGainCalb(const std::string &name):
  SubsysReco(name)
 {
-
+  /*
   fout = new TFile("readback_ntuple.root","RECREATE");
 
   ntp = new TNtuple("ntp", "ntp", "pt:x:y:z:dcaxy:dcaz:vtxid:nclus:qual");
-
+  */
   //cout << "TPCGemGainCalb::TPCGemGainCalb(const std::string &name) Calling ctor" << endl;
 }
 
@@ -79,15 +82,41 @@ int TPCGemGainCalb::process_event(PHCompositeNode *topNode)
   double mean_pt = 0;
   double mean_clusters = 0;
 
-  float pt, x, y, z, dcaxy, dcaz, vtxid, nclus, qual;
-  std::cout << "Track map has " << _track_map->size() << " entries" << std::endl;  
+  //float pt, x, y, z, dcaxy, dcaz, vtxid, nclus, qual;
+  if(Verbosity() > 0)
+    std::cout << "Track map has " << _track_map->size() << " entries" << std::endl;  
   for (auto phtrk_iter = _track_map->begin();
        phtrk_iter != _track_map->end(); 
        ++phtrk_iter)
     {
       _track = phtrk_iter->second;
+      if(Verbosity() > 0)
+	cout << "got to _track assignment, trackid:" << phtrk_iter->first << std::endl;
+      for(auto clst_iter = _track->begin_cluster_keys(); clst_iter != _track->end_cluster_keys(); ++clst_iter)
+	{
+	  auto clst_key = *clst_iter;
+	  TrkrDefs::hitsetkey hitsetkey =  TrkrDefs::getHitSetKeyFromClusKey(clst_key);
+	  TrkrHitSet *hitset = _hitset_map->findHitSet(hitsetkey);
+	  auto hit_key_list = _cluster_hit_map->getHits(clst_key);
+	  if(Verbosity() > 0)
+	    cout << "Got to hit_key_list assignment, hitsetkey:" << hitsetkey << std::endl;
+	  for(auto hitset_iter = hit_key_list.first; hitset_iter != hit_key_list.second; ++hitset_iter)
+	    {
+	      auto hit_key = hitset_iter->second;
+	      TrkrHit *hit = hitset->getHit(hit_key);
+	      unsigned short Adc = hit->getAdc();
+	      if(Verbosity() > 0)
+		std::cout << "clst_key: " << clst_key << "hit_key: " << hit_key << "Adc: " << Adc << std::endl;
+	      
+	      
+	      
+	    }
 
-      pt = _track->get_pt();
+
+
+	  
+	}
+      /*  pt = _track->get_pt();
       x = _track->get_x()  ;
       y = _track->get_y();
       z = _track->get_z();
@@ -96,10 +125,10 @@ int TPCGemGainCalb::process_event(PHCompositeNode *topNode)
       vtxid = (float) _track->get_vertex_id();
       nclus = (float) _track-> size_cluster_keys();
       qual = _track->get_chisq() / (float) _track->get_ndf();
-
+      
       if(Verbosity() > 0)
       std::cout
-	<< __LINE__
+		<< __LINE__
 	<< ": Processing itrack: " << phtrk_iter->first
 	<< ": nclus: " << nclus
 	<< ": pT " << pt
@@ -110,8 +139,8 @@ int TPCGemGainCalb::process_event(PHCompositeNode *topNode)
 	<< ", dcaz " << dcaz
 	<< ", vtxid " << vtxid
 	<< endl;
-
-      ntp->Fill(_track->get_pt(),
+	*/
+      /*  ntp->Fill(_track->get_pt(),
 		_track->get_x(), 
 		_track->get_y(), 
 		_track->get_z(), 
@@ -121,7 +150,7 @@ int TPCGemGainCalb::process_event(PHCompositeNode *topNode)
 		(float) _track->size_cluster_keys(),
 		qual
 		);
-      
+      */
       ntracks ++;
       mean_pt += _track->get_pt();
       mean_clusters += _track->size_cluster_keys();
@@ -183,7 +212,7 @@ int TPCGemGainCalb::EndRun(PHCompositeNode *topNode)
 //____________________________________________________________________________..
 int TPCGemGainCalb::End(PHCompositeNode *topNode)
 {
-  fout->Write();
+  //fout->Write();
   //ntp->Write();
   //fout->Close();
 
@@ -206,6 +235,22 @@ int  TPCGemGainCalb::GetNodes(PHCompositeNode* topNode)
   }
 
 
+  _cluster_hit_map = findNode::getClass<TrkrClusterHitAssoc>(topNode, "TRKR_CLUSTERHITASSOC");
+  if (!_cluster_hit_map)
+  {
+    cerr << PHWHERE << " ERROR: Can't find node TRKR_CLUSTERHITASSOC" << endl;
+    return Fun4AllReturnCodes::ABORTEVENT;
+  }
+
+
+  _hitset_map = findNode::getClass<TrkrHitSetContainer>(topNode, "TRKR_HITSET");
+  if (!_hitset_map)
+  {
+    cerr << PHWHERE << " ERROR: Can't find node TRKR_HITSET" << endl;
+    return Fun4AllReturnCodes::ABORTEVENT;
+  }
+
+
   _vertex_map = findNode::getClass<SvtxVertexMap>(topNode, "SvtxVertexMap");
   if (!_vertex_map)
     {
@@ -223,4 +268,5 @@ int  TPCGemGainCalb::GetNodes(PHCompositeNode* topNode)
 
   return Fun4AllReturnCodes::EVENT_OK;
 }
+
 

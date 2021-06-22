@@ -43,7 +43,8 @@ int Fun4All_TPCGemGainCalb(
   char num_field[500];
   sprintf(num_field,"%04d.root", process);
   string numin = num_field;
-  string embed_infile1 = embed_input_str1+numin;
+  //string embed_infile1 = embed_input_str1+numin;
+  string embed_infile1 = "/sphenix/user/ddiscenza/Work/June8/macros/macros/detectors/sPHENIX/G4sPHENIX.root";
   string outputFile = outputFile_str+numin;
 
   cout << "input file1: " << embed_infile1 << endl;
@@ -60,7 +61,7 @@ int Fun4All_TPCGemGainCalb(
   InputManagers();
 
   TPCGemGainCalb *track_readback = new TPCGemGainCalb();
-  track_readback->Verbosity(1);
+  track_readback->Verbosity(0);
   se->registerSubsystem(track_readback);
 
 

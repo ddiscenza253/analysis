@@ -14,6 +14,8 @@ class PHCompositeNode;
 class SvtxTrackMap;
 class SvtxTrack;
 class SvtxVertexMap;
+class TrkrClusterHitAssoc;
+class TrkrHitSetContainer;
 
 class TF1;
 class TNtuple;
@@ -52,6 +54,9 @@ int End(PHCompositeNode *topNode);
   SvtxTrack *_track{nullptr};
   SvtxVertexMap *_vertex_map{nullptr};
   TrkrClusterContainer *_cluster_map;
+  TrkrClusterHitAssoc *_cluster_hit_map;
+  TrkrHitSetContainer *_hitset_map;
+
 
   TNtuple *ntp{nullptr};
   TFile *fout;
